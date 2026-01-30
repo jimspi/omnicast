@@ -4,11 +4,25 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Detect if running on Vercel (serverless)
+IS_VERCEL = os.environ.get('VERCEL', False)
+
 BASE_DIR = Path(__file__).resolve().parent.parent
-UPLOAD_DIR = BASE_DIR / "uploads"
+
+# Use /tmp for Vercel serverless, local directories otherwise
+if IS_VERCEL:
+    UPLOAD_DIR = Path("/tmp/uploads")
+    OUTPUT_DIR = Path("/tmp/outputs")
+else:
+    UPLOAD_DIR = BASE_DIR / "uploads"
+    OUTPUT_DIR = BASE_DIR / "outputs"
+
 RAW_DIR = UPLOAD_DIR / "raw"
 PROCESSED_DIR = UPLOAD_DIR / "processed"
-OUTPUT_DIR = BASE_DIR / "outputs"
+
+# Static files directory
+STATIC_DIR = BASE_DIR / "frontend" / "static"
+TEMPLATES_DIR = BASE_DIR / "frontend" / "templates"
 
 # Ensure directories exist
 for dir_path in [RAW_DIR, PROCESSED_DIR, OUTPUT_DIR / "tv", OUTPUT_DIR / "web",

@@ -16,7 +16,7 @@ import aiofiles
 from .config import (
     BASE_DIR, RAW_DIR, PROCESSED_DIR, OUTPUT_DIR,
     SUPPORTED_VIDEO_FORMATS, SUPPORTED_AUDIO_FORMATS, SUPPORTED_TEXT_FORMATS,
-    OPENAI_API_KEY
+    OPENAI_API_KEY, IS_VERCEL, STATIC_DIR, TEMPLATES_DIR
 )
 from . import openai_service
 from . import media_processor
@@ -37,9 +37,11 @@ app.add_middleware(
 )
 
 # Mount static files and templates
-app.mount("/static", StaticFiles(directory=str(BASE_DIR / "frontend" / "static")), name="static")
-app.mount("/outputs", StaticFiles(directory=str(OUTPUT_DIR)), name="outputs")
-templates = Jinja2Templates(directory=str(BASE_DIR / "frontend" / "templates"))
+if STATIC_DIR.exists():
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+if OUTPUT_DIR.exists():
+    app.mount("/outputs", StaticFiles(directory=str(OUTPUT_DIR)), name="outputs")
+templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 # In-memory job storage (in production, use Redis or a database)
 jobs: Dict[str, Dict[str, Any]] = {}
