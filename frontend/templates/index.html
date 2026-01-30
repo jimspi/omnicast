@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OmniCast - Multi-Format News Distribution Platform</title>
+    <title>OmniCast - Multi-Format News Distribution</title>
     <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📡</text></svg>">
 </head>
 <body>
     <div class="app-container">
@@ -17,7 +18,7 @@
                 </svg>
                 <span class="logo-text">OmniCast</span>
             </div>
-            <div class="header-subtitle">Multi-Format News Distribution Platform</div>
+            <div class="header-subtitle">Transform stories into every format</div>
         </header>
 
         <!-- Main Content -->
@@ -28,17 +29,16 @@
 
                 <!-- Notes Input -->
                 <div class="input-group">
-                    <label for="notes">Story Notes & Research</label>
+                    <label for="notes">Notes & Research</label>
                     <textarea
                         id="notes"
-                        placeholder="Enter your story notes, research, key facts, quotes, and any other relevant information..."
-                        rows="8"
+                        placeholder="Enter your story notes, key facts, quotes, and research materials..."
+                        rows="6"
                     ></textarea>
                 </div>
 
                 <!-- File Uploads -->
                 <div class="upload-grid">
-                    <!-- Interview Video -->
                     <div class="upload-card" id="interview-upload">
                         <div class="upload-icon">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -46,15 +46,14 @@
                             </svg>
                         </div>
                         <h3>Interview Video</h3>
-                        <p>Upload raw interview footage</p>
+                        <p>Raw interview footage</p>
                         <input type="file" id="interview-file" accept="video/*" hidden>
                         <button class="upload-btn" onclick="document.getElementById('interview-file').click()">
-                            Select Video
+                            Select File
                         </button>
                         <div class="file-info" id="interview-info"></div>
                     </div>
 
-                    <!-- B-Roll Video -->
                     <div class="upload-card" id="broll-upload">
                         <div class="upload-icon">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -62,17 +61,13 @@
                                 <line x1="7" y1="2" x2="7" y2="22"/>
                                 <line x1="17" y1="2" x2="17" y2="22"/>
                                 <line x1="2" y1="12" x2="22" y2="12"/>
-                                <line x1="2" y1="7" x2="7" y2="7"/>
-                                <line x1="2" y1="17" x2="7" y2="17"/>
-                                <line x1="17" y1="17" x2="22" y2="17"/>
-                                <line x1="17" y1="7" x2="22" y2="7"/>
                             </svg>
                         </div>
                         <h3>B-Roll Footage</h3>
-                        <p>Upload supplementary video clips</p>
+                        <p>Supplementary clips</p>
                         <input type="file" id="broll-file" accept="video/*" hidden>
                         <button class="upload-btn" onclick="document.getElementById('broll-file').click()">
-                            Select Video
+                            Select File
                         </button>
                         <div class="file-info" id="broll-info"></div>
                     </div>
@@ -91,8 +86,8 @@
                                         <polyline points="17 2 12 7 7 2"/>
                                     </svg>
                                 </span>
-                                <span class="format-name">TV Broadcast</span>
-                                <span class="format-desc">Professional news script</span>
+                                <span class="format-name">TV</span>
+                                <span class="format-desc">Broadcast script</span>
                             </span>
                         </label>
 
@@ -106,8 +101,8 @@
                                         <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
                                     </svg>
                                 </span>
-                                <span class="format-name">Web Article</span>
-                                <span class="format-desc">SEO-optimized article</span>
+                                <span class="format-name">Web</span>
+                                <span class="format-desc">SEO article</span>
                             </span>
                         </label>
 
@@ -121,8 +116,8 @@
                                         <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
                                     </svg>
                                 </span>
-                                <span class="format-name">Social Media</span>
-                                <span class="format-desc">Video with captions & overlays</span>
+                                <span class="format-name">Social</span>
+                                <span class="format-desc">Video + captions</span>
                             </span>
                         </label>
 
@@ -136,7 +131,7 @@
                                     </svg>
                                 </span>
                                 <span class="format-name">YouTube</span>
-                                <span class="format-desc">Optimized long-form video</span>
+                                <span class="format-desc">Long-form</span>
                             </span>
                         </label>
 
@@ -152,7 +147,7 @@
                                     </svg>
                                 </span>
                                 <span class="format-name">Podcast</span>
-                                <span class="format-desc">Audio with show notes</span>
+                                <span class="format-desc">Audio + notes</span>
                             </span>
                         </label>
                     </div>
@@ -173,7 +168,7 @@
             <section class="progress-section" id="progress-section" style="display: none;">
                 <div class="progress-card">
                     <div class="progress-header">
-                        <h3>Processing Story</h3>
+                        <h3>Processing</h3>
                         <span class="progress-percent" id="progress-percent">0%</span>
                     </div>
                     <div class="progress-bar">
@@ -187,7 +182,6 @@
             <section class="results-section" id="results-section" style="display: none;">
                 <h2 class="section-title">Generated Content</h2>
 
-                <!-- Results Tabs -->
                 <div class="results-tabs">
                     <button class="tab-btn active" data-tab="tv">TV</button>
                     <button class="tab-btn" data-tab="web">Web</button>
@@ -196,9 +190,7 @@
                     <button class="tab-btn" data-tab="podcast">Podcast</button>
                 </div>
 
-                <!-- Tab Content -->
                 <div class="tab-content" id="tab-content">
-                    <!-- TV Content -->
                     <div class="tab-pane active" id="tv-pane">
                         <div class="result-card">
                             <h3>TV Broadcast Script</h3>
@@ -207,7 +199,6 @@
                         </div>
                     </div>
 
-                    <!-- Web Content -->
                     <div class="tab-pane" id="web-pane">
                         <div class="result-card">
                             <h3>Web Article</h3>
@@ -216,7 +207,6 @@
                         </div>
                     </div>
 
-                    <!-- Social Content -->
                     <div class="tab-pane" id="social-pane">
                         <div class="result-card">
                             <h3>Social Media Post</h3>
@@ -225,7 +215,6 @@
                         </div>
                     </div>
 
-                    <!-- YouTube Content -->
                     <div class="tab-pane" id="youtube-pane">
                         <div class="result-card">
                             <h3>YouTube Video</h3>
@@ -234,7 +223,6 @@
                         </div>
                     </div>
 
-                    <!-- Podcast Content -->
                     <div class="tab-pane" id="podcast-pane">
                         <div class="result-card">
                             <h3>Podcast Episode</h3>
@@ -246,9 +234,8 @@
             </section>
         </main>
 
-        <!-- Footer -->
         <footer class="footer">
-            <p>OmniCast - Transform your story into every format</p>
+            <p>OmniCast &mdash; Transform your story into every format</p>
         </footer>
     </div>
 
