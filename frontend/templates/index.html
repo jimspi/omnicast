@@ -92,78 +92,6 @@
             resize: vertical;
         }
 
-        .upload-section {
-            margin-bottom: 24px;
-        }
-
-        .upload-section h3 {
-            font-size: 13px;
-            font-weight: 500;
-            color: #aaa;
-            margin-bottom: 12px;
-        }
-
-        .upload-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .upload-box {
-            background: #0a0a0a;
-            border: 1px dashed #333;
-            border-radius: 8px;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .upload-box:hover {
-            border-color: #444;
-            background: #111;
-        }
-
-        .upload-box.has-file {
-            border-color: #22c55e;
-            border-style: solid;
-        }
-
-        .upload-box input {
-            display: none;
-        }
-
-        .upload-icon {
-            width: 32px;
-            height: 32px;
-            margin: 0 auto 8px;
-            color: #555;
-        }
-
-        .upload-icon svg {
-            width: 100%;
-            height: 100%;
-        }
-
-        .upload-box h4 {
-            font-size: 13px;
-            font-weight: 500;
-            color: #888;
-            margin-bottom: 4px;
-        }
-
-        .upload-box p {
-            font-size: 11px;
-            color: #555;
-        }
-
-        .upload-box .file-name {
-            font-size: 11px;
-            color: #22c55e;
-            margin-top: 8px;
-            word-break: break-all;
-        }
-
         .format-section {
             margin-bottom: 24px;
         }
@@ -410,10 +338,6 @@
         }
 
         @media (max-width: 500px) {
-            .upload-grid {
-                grid-template-columns: 1fr;
-            }
-
             .card {
                 padding: 24px;
             }
@@ -439,33 +363,14 @@
                     <textarea id="notes" name="notes" placeholder="Enter your story notes, facts, background info..." required></textarea>
                 </div>
 
-                <div class="upload-section">
-                    <h3>Media Files</h3>
-                    <div class="upload-grid">
-                        <div class="upload-box" onclick="document.getElementById('interviewFile').click()">
-                            <input type="file" id="interviewFile" accept="video/*,audio/*" onchange="handleFileSelect(this, 'interview')">
-                            <div class="upload-icon">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                                </svg>
-                            </div>
-                            <h4>Interview</h4>
-                            <p>Video or audio</p>
-                            <div class="file-name" id="interviewFileName"></div>
-                        </div>
+                <div class="form-group">
+                    <label for="interviewTranscript">Interview Transcript (optional)</label>
+                    <textarea id="interviewTranscript" name="interviewTranscript" placeholder="Paste interview transcripts, quotes, or soundbites here..."></textarea>
+                </div>
 
-                        <div class="upload-box" onclick="document.getElementById('brollFile').click()">
-                            <input type="file" id="brollFile" accept="video/*" onchange="handleFileSelect(this, 'broll')">
-                            <div class="upload-icon">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"/>
-                                </svg>
-                            </div>
-                            <h4>B-Roll</h4>
-                            <p>Video footage</p>
-                            <div class="file-name" id="brollFileName"></div>
-                        </div>
-                    </div>
+                <div class="form-group">
+                    <label for="brollDescription">B-Roll Description (optional)</label>
+                    <textarea id="brollDescription" name="brollDescription" placeholder="Describe available footage: interviews, location shots, graphics..." style="min-height: 60px;"></textarea>
                 </div>
 
                 <div class="format-section">
@@ -519,23 +424,7 @@
     </div>
 
     <script>
-        let uploadedFiles = {
-            interview: null,
-            broll: null
-        };
-
         let currentJobId = null;
-        let pollInterval = null;
-
-        function handleFileSelect(input, type) {
-            const file = input.files[0];
-            if (file) {
-                uploadedFiles[type] = file;
-                const nameEl = document.getElementById(type + 'FileName');
-                nameEl.textContent = file.name;
-                input.closest('.upload-box').classList.add('has-file');
-            }
-        }
 
         function toggleFormat(el) {
             el.classList.toggle('selected');
@@ -556,36 +445,13 @@
             setTimeout(() => el.classList.remove('active'), 5000);
         }
 
-        async function uploadFile(file, fileType) {
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('file_type', fileType);
-
-            const response = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData
-            });
-
-            if (!response.ok) {
-                let errorMsg = 'Upload failed';
-                try {
-                    const error = await response.json();
-                    errorMsg = error.detail || error.error || errorMsg;
-                } catch {
-                    const text = await response.text();
-                    errorMsg = text || `Upload failed (${response.status})`;
-                }
-                throw new Error(errorMsg);
-            }
-
-            return await response.json();
-        }
-
         async function submitStory(e) {
             e.preventDefault();
 
             const notes = document.getElementById('notes').value.trim();
             const storyTitle = document.getElementById('storyTitle').value.trim();
+            const interviewTranscript = document.getElementById('interviewTranscript').value.trim();
+            const brollDescription = document.getElementById('brollDescription').value.trim();
             const formats = getSelectedFormats();
 
             if (!notes || !storyTitle) {
@@ -600,36 +466,25 @@
 
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Processing...';
+            submitBtn.textContent = 'Generating...';
 
             const progressSection = document.getElementById('progressSection');
             progressSection.classList.add('active');
+            updateProgress(10, 'Starting content generation...');
 
             try {
-                // Upload files first
-                let interviewVideoId = null;
-                let brollVideoId = null;
-
-                if (uploadedFiles.interview) {
-                    updateProgress(5, 'Uploading interview file...');
-                    const result = await uploadFile(uploadedFiles.interview, 'video');
-                    interviewVideoId = result.file_id;
+                // Build full notes with all context
+                let fullNotes = `Title: ${storyTitle}\n\n${notes}`;
+                if (interviewTranscript) {
+                    fullNotes += `\n\nINTERVIEW TRANSCRIPT:\n${interviewTranscript}`;
                 }
-
-                if (uploadedFiles.broll) {
-                    updateProgress(10, 'Uploading B-roll file...');
-                    const result = await uploadFile(uploadedFiles.broll, 'video');
-                    brollVideoId = result.file_id;
+                if (brollDescription) {
+                    fullNotes += `\n\nB-ROLL/VISUALS AVAILABLE:\n${brollDescription}`;
                 }
-
-                // Start processing
-                updateProgress(15, 'Starting content generation...');
 
                 const formData = new FormData();
-                formData.append('notes', `Title: ${storyTitle}\n\n${notes}`);
+                formData.append('notes', fullNotes);
                 formData.append('output_formats', formats.join(','));
-                if (interviewVideoId) formData.append('interview_video_id', interviewVideoId);
-                if (brollVideoId) formData.append('broll_video_id', brollVideoId);
 
                 const response = await fetch('/api/process', {
                     method: 'POST',

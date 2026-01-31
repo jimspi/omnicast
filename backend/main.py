@@ -161,54 +161,17 @@ async def process_story_background(
     """Background task to process story and generate all formats."""
     try:
         job = jobs[job_id]
-        total_steps = len(formats) + 2  # +2 for transcription and analysis
+        total_steps = len(formats)
         current_step = 0
 
-        # Step 1: Transcribe interview video if provided
-        interview_transcript = ""
-        interview_audio_path = None
+        job["status"] = "Preparing content..."
+        job["progress"] = 5
 
-        if interview_video_id:
-            job["status"] = "Transcribing interview..."
-            # Find the video file
-            interview_video = find_uploaded_file(interview_video_id)
-            if interview_video:
-                try:
-                    # Extract audio
-                    interview_audio_path = str(PROCESSED_DIR / f"{interview_video_id}_audio.mp3")
-                    await media_processor.extract_audio_from_video(interview_video, interview_audio_path)
-                    # Transcribe
-                    interview_transcript = await openai_service.transcribe_audio_simple(interview_audio_path)
-                except Exception as e:
-                    job["errors"].append(f"Error transcribing interview: {str(e)}")
-
-        current_step += 1
-        job["progress"] = int((current_step / total_steps) * 100)
-
-        # Step 2: Analyze B-roll if provided
-        broll_description = ""
-        broll_video_path = None
-
-        if broll_video_id:
-            job["status"] = "Analyzing B-roll footage..."
-            broll_video_path = find_uploaded_file(broll_video_id)
-            if broll_video_path:
-                try:
-                    # Get video info for description
-                    video_info = await media_processor.get_video_info(broll_video_path)
-                    duration = video_info.get('format', {}).get('duration', 'unknown')
-                    broll_description = f"B-roll footage available, duration: {duration} seconds"
-                except Exception as e:
-                    broll_description = "B-roll footage available"
-
-        current_step += 1
-        job["progress"] = int((current_step / total_steps) * 100)
-
-        # Build story context
+        # Build story context from notes (may contain embedded transcript/broll info)
         story_context = {
             "notes": notes,
-            "interview_transcript": interview_transcript,
-            "broll_description": broll_description
+            "interview_transcript": "",
+            "broll_description": ""
         }
 
         # Generate each format
@@ -225,23 +188,19 @@ async def process_story_background(
                     job["outputs"]["web"] = result
 
                 elif format_type == "social":
-                    result = await generate_social_output(
-                        job_id, story_context, broll_video_path or interview_video_path_from_id(interview_video_id)
-                    )
+                    result = await generate_social_output(job_id, story_context, None)
                     job["outputs"]["social"] = result
 
                 elif format_type == "youtube":
-                    result = await generate_youtube_output(
-                        job_id, story_context, broll_video_path or interview_video_path_from_id(interview_video_id)
-                    )
+                    result = await generate_youtube_output(job_id, story_context, None)
                     job["outputs"]["youtube"] = result
 
                 elif format_type == "podcast":
-                    result = await generate_podcast_output(job_id, story_context, interview_audio_path)
+                    result = await generate_podcast_output(job_id, story_context, None)
                     job["outputs"]["podcast"] = result
 
                 current_step += 1
-                job["progress"] = int((current_step / total_steps) * 100)
+                job["progress"] = int(10 + (current_step / total_steps) * 90)
 
             except Exception as e:
                 job["errors"].append(f"Error generating {format_type}: {str(e)}")
