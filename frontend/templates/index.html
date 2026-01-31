@@ -567,8 +567,15 @@
             });
 
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.detail || 'Upload failed');
+                let errorMsg = 'Upload failed';
+                try {
+                    const error = await response.json();
+                    errorMsg = error.detail || error.error || errorMsg;
+                } catch {
+                    const text = await response.text();
+                    errorMsg = text || `Upload failed (${response.status})`;
+                }
+                throw new Error(errorMsg);
             }
 
             return await response.json();
@@ -630,15 +637,34 @@
                 });
 
                 if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.detail || 'Processing failed');
+                    let errorMsg = 'Processing failed';
+                    try {
+                        const error = await response.json();
+                        errorMsg = error.detail || error.error || errorMsg;
+                    } catch {
+                        const text = await response.text();
+                        errorMsg = text || `Processing failed (${response.status})`;
+                    }
+                    throw new Error(errorMsg);
                 }
 
                 const result = await response.json();
                 currentJobId = result.job_id;
 
-                // Start polling for status
-                pollJobStatus();
+                // Check if job completed synchronously (Vercel serverless)
+                if (result.status === 'completed') {
+                    // Fetch final job data
+                    const jobResponse = await fetch(`/api/job/${currentJobId}`);
+                    if (jobResponse.ok) {
+                        const job = await jobResponse.json();
+                        displayResults(job);
+                        document.getElementById('submitBtn').disabled = false;
+                        document.getElementById('submitBtn').textContent = 'Generate Content';
+                    }
+                } else {
+                    // Start polling for status (local development)
+                    pollJobStatus();
+                }
 
             } catch (error) {
                 showError(error.message);
@@ -661,6 +687,18 @@
 
             try {
                 const response = await fetch(`/api/job/${currentJobId}`);
+
+                if (!response.ok) {
+                    let errorMsg = 'Failed to check status';
+                    try {
+                        const error = await response.json();
+                        errorMsg = error.detail || error.error || errorMsg;
+                    } catch {
+                        errorMsg = `Status check failed (${response.status})`;
+                    }
+                    throw new Error(errorMsg);
+                }
+
                 const job = await response.json();
 
                 updateProgress(job.progress, job.status);
@@ -679,7 +717,7 @@
                     setTimeout(pollJobStatus, 1500);
                 }
             } catch (error) {
-                showError('Failed to check status');
+                showError(error.message || 'Failed to check status');
                 setTimeout(pollJobStatus, 3000);
             }
         }

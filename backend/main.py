@@ -107,6 +107,10 @@ async def process_story(
     output_formats: str = Form(default="tv,web,social,youtube,podcast")
 ):
     """Process story materials and generate multi-format content."""
+    # Check if OpenAI API key is configured
+    if not OPENAI_API_KEY:
+        raise HTTPException(500, "OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.")
+
     job_id = str(uuid.uuid4())
 
     # Parse requested formats
@@ -123,13 +127,28 @@ async def process_story(
         "created_at": datetime.now().isoformat()
     }
 
-    # Start background processing
-    background_tasks.add_task(
-        process_story_background,
-        job_id, notes, interview_video_id, broll_video_id, formats
-    )
+    # For Vercel serverless, process synchronously
+    if IS_VERCEL:
+        await process_story_sync(job_id, notes, interview_video_id, broll_video_id, formats)
+    else:
+        # Start background processing for local development
+        background_tasks.add_task(
+            process_story_background,
+            job_id, notes, interview_video_id, broll_video_id, formats
+        )
 
-    return {"job_id": job_id, "status": "processing"}
+    return {"job_id": job_id, "status": jobs[job_id]["status"]}
+
+
+async def process_story_sync(
+    job_id: str,
+    notes: str,
+    interview_video_id: Optional[str],
+    broll_video_id: Optional[str],
+    formats: List[str]
+):
+    """Synchronous processing for Vercel serverless environment."""
+    await process_story_background(job_id, notes, interview_video_id, broll_video_id, formats)
 
 
 async def process_story_background(
@@ -154,12 +173,14 @@ async def process_story_background(
             # Find the video file
             interview_video = find_uploaded_file(interview_video_id)
             if interview_video:
-                # Extract audio
-                interview_audio_path = str(PROCESSED_DIR / f"{interview_video_id}_audio.mp3")
-                await media_processor.extract_audio_from_video(interview_video, interview_audio_path)
-
-                # Transcribe
-                interview_transcript = await openai_service.transcribe_audio_simple(interview_audio_path)
+                try:
+                    # Extract audio
+                    interview_audio_path = str(PROCESSED_DIR / f"{interview_video_id}_audio.mp3")
+                    await media_processor.extract_audio_from_video(interview_video, interview_audio_path)
+                    # Transcribe
+                    interview_transcript = await openai_service.transcribe_audio_simple(interview_audio_path)
+                except Exception as e:
+                    job["errors"].append(f"Error transcribing interview: {str(e)}")
 
         current_step += 1
         job["progress"] = int((current_step / total_steps) * 100)
@@ -172,10 +193,13 @@ async def process_story_background(
             job["status"] = "Analyzing B-roll footage..."
             broll_video_path = find_uploaded_file(broll_video_id)
             if broll_video_path:
-                # Get video info for description
-                video_info = await media_processor.get_video_info(broll_video_path)
-                duration = video_info.get('format', {}).get('duration', 'unknown')
-                broll_description = f"B-roll footage available, duration: {duration} seconds"
+                try:
+                    # Get video info for description
+                    video_info = await media_processor.get_video_info(broll_video_path)
+                    duration = video_info.get('format', {}).get('duration', 'unknown')
+                    broll_description = f"B-roll footage available, duration: {duration} seconds"
+                except Exception as e:
+                    broll_description = "B-roll footage available"
 
         current_step += 1
         job["progress"] = int((current_step / total_steps) * 100)
